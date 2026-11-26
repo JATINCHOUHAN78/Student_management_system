@@ -1,12 +1,13 @@
 import hashlib
 import os
 import sqlite3
+from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
 
 import pandas as pd
 import psycopg2
-from psycopg2.extras import RealDictCursor, execute_values
+from psycopg2.extras import RealDictCursor
 import streamlit as st
 
 APP_DIR = Path(__file__).parent
@@ -25,6 +26,17 @@ def get_conn():
     if "sslmode=" not in url and ".render.com" in url:
         url += ("&" if "?" in url else "?") + "sslmode=require"
     return psycopg2.connect(url, cursor_factory=RealDictCursor, connect_timeout=10)
+
+
+@contextmanager
+def db_conn():
+    """Commit/rollback a transaction and always close the PostgreSQL connection."""
+    conn = get_conn()
+    try:
+        with conn:
+            yield conn
+    finally:
+        conn.close()
 
 
 def migrate_legacy_sqlite(conn):
@@ -67,7 +79,7 @@ def migrate_legacy_sqlite(conn):
 
 
 def init_db():
-    with get_conn() as conn:
+    with db_conn() as conn:
         with conn.cursor() as cur:
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS students (
