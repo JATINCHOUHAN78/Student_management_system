@@ -1,55 +1,47 @@
 # Student Information Management System
 
-A Streamlit student-record management app backed by SQLite.
+Streamlit app with PostgreSQL storage.
 
 ## Features
 - Admin login
-- Dashboard with student, course and branch counts
-- Add, view, search, update and delete student records
-- CSV export
-- Unique roll-number validation
+- Existing student CRUD: add, view, search, update, delete and CSV export
+- Teacher directory: add, view and delete teachers (teachers linked to attendance cannot be deleted)
+- Attendance entry by date, subject and teacher: Present / Absent / Late
+- Re-entry for the same student/date/subject updates the existing record
+- Date-range reports, student-wise attendance percentage and CSV export
+- PostgreSQL foreign keys and indexes
 
 ## Run locally
-Use Python 3.11.
+Python 3.11 is recommended.
 
 ```bash
 pip install -r requirements.txt
+# Set DATABASE_URL to your PostgreSQL connection string
 streamlit run app.py
 ```
 
-Open the local URL printed by Streamlit (normally http://localhost:8501).
+## Deploy on Render with PostgreSQL
+1. In Render Dashboard choose **New → PostgreSQL**. Create the database in the same region as the web service.
+2. Open the database's **Connect** tab and copy its **Internal Database URL**.
+3. Open the existing web service → **Environment**. Add `DATABASE_URL` with that Internal Database URL.
+4. Add `ADMIN_USERNAME` (for example, `admin`) and `ADMIN_PASSWORD_SHA256` (SHA-256 digest of your chosen password). Do not store the raw password in GitHub.
+5. Push/merge this branch to the branch configured for your Render service, or change the service's branch to this feature branch and deploy.
+6. Confirm the deploy logs show the app started and then sign in.
 
-## Demo login
-- Username: `admin`
-- Password: `Admin@123`
-
-These are demonstration credentials only. Do not use them for a real deployment.
-
-## Deploy on Streamlit Community Cloud
-1. Push this repository to GitHub.
-2. Visit https://share.streamlit.io/ and sign in with GitHub.
-3. Select **Create app**.
-4. Select this repository, the deployment branch, and `app.py` as the main file.
-5. Select **Deploy**.
-
-### Configure an admin password
-In Streamlit Community Cloud, open the app's **Settings → Secrets** and set:
-
-```toml
-ADMIN_USERNAME = "your_admin_username"
-ADMIN_PASSWORD_SHA256 = "your_sha256_password_hash"
-```
-
-Generate a SHA-256 hash locally (the command prompts without displaying your password):
-
+Generate a password hash locally:
 ```bash
 python -c "import hashlib,getpass; print(hashlib.sha256(getpass.getpass('New password: ').encode()).hexdigest())"
 ```
 
-Never commit passwords, API keys, or other secrets to GitHub.
+Use the database's **Internal Database URL** for a Render-hosted service in the same region. Use the external URL only for local tools, with TLS enabled. Never commit connection strings or secrets.
 
-## Important database limitation
-This app stores records in a local SQLite file named `students.db`. Streamlit Community Cloud's local filesystem is not a durable database; data can be lost when the app is restarted, rebuilt, or redeployed. This version is suitable for a demonstration, not as the permanent system of record for a college. For real student data, migrate to a managed database such as PostgreSQL (for example, Supabase) and keep connection credentials in Streamlit Secrets.
+## Existing student data migration
+The app automatically imports student rows from a legacy `students.db` SQLite file if that file is present beside `app.py` at startup. Import is idempotent by unique `roll_number`; existing PostgreSQL rows are not overwritten.
 
-## Security and privacy
-This is an educational starter project, not a production-ready student information system. Before storing real student information, implement robust authentication and authorization, secure password hashing, database backups, audit logging, input validation, and an appropriate privacy policy.
+Important: Render's ordinary service filesystem is ephemeral. A deploy may not retain the old SQLite file. If the old records exist only in the previous Render instance, export the Students table to CSV before switching deployments, then import those rows into PostgreSQL. Do not assume a GitHub copy of the code contains the live SQLite data. Take a backup before changing the live service.
+
+## Database schema
+The app creates `students`, `teachers`, and `attendance` tables on startup. Existing student columns are retained. Deleting a student also deletes their attendance rows; a teacher with linked attendance cannot be deleted.
+
+## Security and production notes
+This is an educational starter app. For real student data, use a strong unique admin password, role-based authentication, backups, audit logs, HTTPS, and a managed database plan with suitable retention and backups. SHA-256 here preserves the existing demo login approach; use a modern password-hashing scheme before production use.
