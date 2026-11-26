@@ -1,61 +1,55 @@
 # Student Information Management System
 
-A Streamlit-based student record management application using SQLite.
+A Streamlit student-record management app backed by SQLite.
 
 ## Features
 - Admin login
-- Dashboard with student/course/branch counts
+- Dashboard with student, course and branch counts
 - Add, view, search, update and delete student records
-- Export student records to CSV
+- CSV export
 - Unique roll-number validation
 
 ## Run locally
-1. Install Python 3.11 or newer.
-2. Open a terminal in this project folder.
-3. Install dependencies:
+Use Python 3.11.
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
 
-4. Start the app:
-
-   ```bash
-   streamlit run app.py
-   ```
-
-5. Open the local URL shown in the terminal (usually http://localhost:8501).
+Open the local URL printed by Streamlit (normally http://localhost:8501).
 
 ## Demo login
 - Username: `admin`
 - Password: `Admin@123`
 
-Change the demo credentials before using this app with real student data.
+These are demonstration credentials only. Do not use them for a real deployment.
 
 ## Deploy on Streamlit Community Cloud
-1. Create a GitHub repository and upload all project files (including the `.streamlit` folder).
-2. Open https://share.streamlit.io/ and sign in with GitHub.
-3. Select **Create app**, choose your repository, branch, and `app.py`.
-4. Click **Deploy**.
+1. Push this repository to GitHub.
+2. Visit https://share.streamlit.io/ and sign in with GitHub.
+3. Select **Create app**.
+4. Select this repository, the deployment branch, and `app.py` as the main file.
+5. Select **Deploy**.
 
-### Optional: set a custom admin password
-In your Streamlit app dashboard, open **App settings → Secrets** and add:
+### Configure an admin password
+In Streamlit Community Cloud, open the app's **Settings → Secrets** and set:
 
 ```toml
 ADMIN_USERNAME = "your_admin_username"
-ADMIN_PASSWORD_SHA256 = "paste_sha256_hash_here"
+ADMIN_PASSWORD_SHA256 = "your_sha256_password_hash"
 ```
 
-Generate the SHA-256 hash locally:
+Generate a SHA-256 hash locally (the command prompts without displaying your password):
 
 ```bash
 python -c "import hashlib,getpass; print(hashlib.sha256(getpass.getpass('New password: ').encode()).hexdigest())"
 ```
 
-Do not commit secrets or real student data to GitHub.
+Never commit passwords, API keys, or other secrets to GitHub.
 
-## Database persistence warning
-This starter project uses a local SQLite database file (`students.db`). It is suitable for local testing and a basic demonstration. Streamlit Community Cloud's local filesystem is not a reliable permanent database: records may be lost when the app is restarted or redeployed. For a real college deployment, connect a hosted database such as Supabase PostgreSQL and keep credentials in Streamlit Secrets.
+## Important database limitation
+This app stores records in a local SQLite file named `students.db`. Streamlit Community Cloud's local filesystem is not a durable database; data can be lost when the app is restarted, rebuilt, or redeployed. This version is suitable for a demonstration, not as the permanent system of record for a college. For real student data, migrate to a managed database such as PostgreSQL (for example, Supabase) and keep connection credentials in Streamlit Secrets.
 
 ## Security and privacy
-This is an educational starter project, not a production-ready student information system. Before storing real student data, add role-based access, stronger authentication, HTTPS-only access, audit logs, backups, input validation, and a privacy policy.
+This is an educational starter project, not a production-ready student information system. Before storing real student information, implement robust authentication and authorization, secure password hashing, database backups, audit logging, input validation, and an appropriate privacy policy.
